@@ -14,7 +14,7 @@ class StudySession:
     def start(cls, subject: str, monotonic_start: float):
         return cls(
             subject=subject.strip(),
-            start_time=datetime.now().replace(second=0, microsecond=0),
+            start_time=datetime.now(),
             monotonic_start=monotonic_start,
             session_id=str(uuid4()),
         )

@@ -17,10 +17,15 @@ class SessionService:
             raise ValueError("Subject cannot be empty")
         self.active_session = StudySession.start(subject, time.monotonic())
 
-    def elapsed_minutes(self):
+    def elapsed_seconds(self):
         if self.active_session is None:
+            return None
+        return max(0.0, time.monotonic() - self.active_session.monotonic_start)
+
+    def elapsed_minutes(self):
+        seconds = self.elapsed_seconds()
+        if seconds is None:
             return 0
-        seconds = time.monotonic() - self.active_session.monotonic_start
         return max(0, int(seconds / 60 + 0.5))
 
     def finish(self):

@@ -8,6 +8,13 @@ from ui.menu import (
 )
 
 
+def format_elapsed(seconds):
+    total_seconds = int(seconds)
+    hours, remainder = divmod(total_seconds, 3600)
+    minutes, secs = divmod(remainder, 60)
+    return f"{hours:02d}:{minutes:02d}:{secs:02d}"
+
+
 def main():
     ensure_directories()
     for message in resume_interrupted_archives():
@@ -22,12 +29,12 @@ def main():
         if service.active_session:
             print(
                 f"\nActive: {service.active_session.subject} "
-                f"({format_minutes(service.elapsed_minutes())} elapsed)"
+                f"({format_elapsed(service.elapsed_seconds())} elapsed)"
             )
         else:
             print(f"\nCurrent subject: {current_subject}")
 
-        print("[S] Start  [E] End  [R] Monthly summary  [P] Plot")
+        print("[S] Start  [E] End  [T] Elapsed time  [R] Monthly summary  [P] Plot")
         print("[C] Change subject  [B] Rebuild month  [A] Archive month  [Q] Quit")
         choice = get_key()
 
@@ -36,7 +43,14 @@ def main():
                 print("A session is already active.")
             else:
                 service.start(current_subject)
-                print(f"Started: {current_subject}")
+                started_at = service.active_session.start_time.strftime("%I:%M:%S %p")
+                print(f"Started: {current_subject} at {started_at}")
+        elif choice == "T":
+            elapsed = service.elapsed_seconds()
+            if elapsed is None:
+                print("No session in progress")
+            else:
+                print(f"Elapsed time: {format_elapsed(elapsed)}")
         elif choice == "E":
             try:
                 result = service.finish()
