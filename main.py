@@ -4,7 +4,7 @@ from services.summary_service import ensure_current_month_summary_exists
 from services.archive_service import resume_interrupted_archives
 from ui.keyboard import get_key
 from ui.menu import (
-    archive_month_menu, format_minutes, plot_menu, rebuild_month, show_month_summary,
+    archive_month_menu, format_minutes, plot_menu, rebuild_month, show_summary,
 )
 
 
@@ -34,7 +34,7 @@ def main():
         else:
             print(f"\nCurrent subject: {current_subject}")
 
-        print("[S] Start  [E] End  [T] Elapsed time  [R] Monthly summary  [P] Plot")
+        print("[S] Start  [E] End  [T] Elapsed time  [R] Summary  [P] Plot")
         print("[C] Change subject  [B] Rebuild month  [A] Archive month  [Q] Quit")
         choice = get_key()
 
@@ -62,7 +62,7 @@ def main():
                 print(f"Daily log was saved but summary update failed: {exc}")
                 print("Use [B] to rebuild that unarchived month's summary.")
         elif choice == "R":
-            show_month_summary()
+            show_summary()
         elif choice == "P":
             plot_menu()
         elif choice == "C":

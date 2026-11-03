@@ -2,7 +2,7 @@ from datetime import date, datetime
 import calendar
 
 from ui.keyboard import get_key
-from services.summary_service import get_month_totals, month_key, rebuild_month_summary
+from services.summary_service import month_key, rebuild_month_summary
 from services.archive_service import archive_month
 from storage.archive_registry import get_month_state
 from reporting.aggregation import get_study_data
@@ -57,6 +57,40 @@ def prompt_plot_quarter():
     return quarter, year
 
 
+def prompt_summary_day():
+    raw = input("Date (YYYY-MM-DD): ").strip()
+    try:
+        return date.fromisoformat(raw)
+    except ValueError as exc:
+        raise ValueError("Enter a date in YYYY-MM-DD format.") from exc
+
+
+def prompt_summary_quarter():
+    raw_quarter = input("Quarter (1-4): ").strip()
+    raw_year = input("Year (YYYY): ").strip()
+    try:
+        quarter = int(raw_quarter)
+        year = int(raw_year)
+        if quarter not in range(1, 5) or not 1 <= year <= 9999:
+            raise ValueError
+    except ValueError as exc:
+        raise ValueError("Enter a quarter from 1 to 4 and a valid year.") from exc
+    return quarter, year
+
+
+def prompt_summary_year():
+    raw = input(f"Year (blank for {date.today().year}): ").strip()
+    if not raw:
+        return date.today().year
+    try:
+        year = int(raw)
+        if not 1 <= year <= 9999:
+            raise ValueError
+        return year
+    except ValueError as exc:
+        raise ValueError("Enter a valid year number.") from exc
+
+
 def prompt_plot_year():
     raw = input(f"Year (blank for {date.today().year}): ").strip()
     if not raw:
@@ -83,17 +117,47 @@ def prompt_date_range():
     return start, end
 
 
-def show_month_summary():
+def show_summary():
     try:
-        year, month = prompt_month()
-        totals = get_month_totals(year, month)
-        print(f"\nSummary for {calendar.month_name[month]} {year}")
-        if not totals:
+        print("\nSummary period: D=day, M=month, Q=quarter, Y=year")
+        choice = get_key("Choose period: ")
+        if choice == "D":
+            selected_day = prompt_summary_day()
+            start = end = selected_day
+            granularity = "day"
+            heading = f"Summary for {selected_day.isoformat()}"
+        elif choice == "M":
+            year, month = prompt_month()
+            start = date(year, month, 1)
+            end = date(year, month, calendar.monthrange(year, month)[1])
+            granularity = "day"
+            heading = f"Summary for {calendar.month_name[month]} {year}"
+        elif choice == "Q":
+            quarter, year = prompt_summary_quarter()
+            first_month = (quarter - 1) * 3 + 1
+            last_month = first_month + 2
+            start = date(year, first_month, 1)
+            end = date(year, last_month, calendar.monthrange(year, last_month)[1])
+            granularity = "month"
+            heading = f"Summary for Q{quarter} {year}"
+        elif choice == "Y":
+            year = prompt_summary_year()
+            start, end = date(year, 1, 1), date(year, 12, 31)
+            granularity = "month"
+            heading = f"Summary for {year}"
+        else:
+            print("Invalid choice.")
+            return
+
+        _, subjects, series = get_study_data(start, end, granularity)
+        totals = {subject: sum(series.get(subject, [])) for subject in subjects}
+        print(f"\n{heading}")
+        if not any(totals.values()):
             print("No study sessions recorded.")
         else:
             for subject, minutes in sorted(totals.items()):
                 print(f"  {subject}: {format_minutes(minutes)}")
-        print(f"Status: {get_month_state(month_key(year, month))}")
+            print(f"  Total: {format_minutes(sum(totals.values()))}")
     except Exception as exc:
         print(f"Could not display summary: {exc}")
 

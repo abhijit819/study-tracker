@@ -4,7 +4,7 @@ Python 3.10+. Install Matplotlib for charts: `python3 -m pip install matplotlib`
 
 Run from this directory with `python3 main.py`.
 
-Keys: S start, E end, R monthly summary, P plots, C change subject,
+Keys: S start, E end, R summary, P plots, C change subject,
 B rebuild month, A archive completed month, Q quit.
 
 Data is stored under `data/`:
@@ -38,3 +38,18 @@ archived month. If an active month's summary cannot be recovered because its
 daily logs are missing or corrupt, plotting reports the problem instead of
 silently treating that month as zero study time. Future months are zero-filled.
 
+
+
+### Summary menu
+
+Choose **R – Summary**, then select a period:
+- **D – Day:** enter a date (`YYYY-MM-DD`).
+- **M – Month:** enter a month (`YYYY-MM`, blank for the current month).
+- **Q – Quarter:** enter a quarter (1–4) and year.
+- **Y – Year:** enter a year (blank for the current year).
+
+The summary totals study time by subject and shows the combined total. For active
+months, missing or invalid monthly summaries are rebuilt from daily logs before
+the summary is displayed. Archived months are read-only and are displayed from
+their retained summaries; they are never rebuilt. If an active month's data
+cannot be recovered from its daily logs, the summary reports the error.
