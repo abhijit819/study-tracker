@@ -1,7 +1,7 @@
 from collections import defaultdict
 from datetime import date, timedelta
 
-from storage.monthly_summaries import summary_path, validate_month_summary
+from services.summary_service import get_or_rebuild_monthly_summary
 
 
 def _months_between(start: date, end: date):
@@ -27,11 +27,17 @@ def get_study_data(start_date: date, end_date: date, granularity="day", subject=
 
     daily = defaultdict(int)
     subjects = set()
+    today = date.today()
+
     for year, month in _months_between(start_date, end_date):
-        path = summary_path(year, month)
-        if not path.exists():
+        # Months wholly in the future have no historical study data yet.
+        # Every past/current month must have a valid summary or be recoverable
+        # from its daily CSV logs.
+        if (year, month) > (today.year, today.month):
             continue
-        for row in validate_month_summary(year, month):
+
+        rows = get_or_rebuild_monthly_summary(year, month)
+        for row in rows:
             day = date.fromisoformat(row["date"])
             name = row["subject"]
             if start_date <= day <= end_date and (subject is None or name == subject):

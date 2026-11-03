@@ -98,3 +98,26 @@ def ensure_current_month_summary_exists():
     path = summary_path(today.year, today.month)
     if not path.exists():
         write_month_summary(today.year, today.month, {})
+
+
+def get_or_rebuild_monthly_summary(year: int, month: int):
+    """
+    Return validated daily rows for a month.
+
+    Active months are repaired lazily from daily logs when their summary is
+    missing or invalid. Archived/archiving months are strictly read-only:
+    their retained summary must already exist and validate successfully.
+    """
+    key = month_key(year, month)
+    state = get_month_state(key)
+
+    if state != "active":
+        # Never recreate or modify an archived (or interrupted-archive) month.
+        return validate_month_summary(year, month)
+
+    try:
+        return validate_month_summary(year, month)
+    except (FileNotFoundError, ValueError):
+        # Rebuild is the recovery path for active months only.
+        rebuild_month_summary(year, month)
+        return validate_month_summary(year, month)

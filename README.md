@@ -27,3 +27,14 @@ by a user with sufficient permissions. A SHA-256 checksum in the archive
 manifest detects changes to archived summaries.
 
 The aggregation layer supports day, month, quarter, and year granularity.
+
+### Plotting archived and active months
+
+Plotting reads the retained monthly summaries. If a past or current month is
+active and its summary is missing or invalid, the tracker rebuilds it from that
+month's daily CSV logs before plotting. Archived months are read-only and are
+plotted from their retained summaries; the tracker never tries to rebuild an
+archived month. If an active month's summary cannot be recovered because its
+daily logs are missing or corrupt, plotting reports the problem instead of
+silently treating that month as zero study time. Future months are zero-filled.
+
