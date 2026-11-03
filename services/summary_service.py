@@ -117,7 +117,14 @@ def get_or_rebuild_monthly_summary(year: int, month: int):
 
     try:
         return validate_month_summary(year, month)
-    except (FileNotFoundError, ValueError):
-        # Rebuild is the recovery path for active months only.
+    except FileNotFoundError:
+        # No summary and no daily logs means this month has no recorded study.
+        # Treat it as zero rather than failing a wider monthly/yearly summary.
+        if not list_daily_log_paths(year, month):
+            return []
+        rebuild_month_summary(year, month)
+        return validate_month_summary(year, month)
+    except ValueError:
+        # A malformed summary is recoverable only from existing daily logs.
         rebuild_month_summary(year, month)
         return validate_month_summary(year, month)

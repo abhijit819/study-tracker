@@ -58,24 +58,31 @@ def prompt_plot_quarter():
 
 
 def prompt_summary_day():
-    raw = input("Date (YYYY-MM-DD): ").strip()
-    try:
-        return date.fromisoformat(raw)
-    except ValueError as exc:
-        raise ValueError("Enter a date in YYYY-MM-DD format.") from exc
+    today = date.today()
 
-
-def prompt_summary_quarter():
-    raw_quarter = input("Quarter (1-4): ").strip()
-    raw_year = input("Year (YYYY): ").strip()
+    raw_year = input(f"Year (blank for {today.year}): ").strip()
     try:
-        quarter = int(raw_quarter)
-        year = int(raw_year)
-        if quarter not in range(1, 5) or not 1 <= year <= 9999:
+        year = today.year if not raw_year else int(raw_year)
+        if not 1 <= year <= 9999:
             raise ValueError
     except ValueError as exc:
-        raise ValueError("Enter a quarter from 1 to 4 and a valid year.") from exc
-    return quarter, year
+        raise ValueError("Enter a valid year.") from exc
+
+    raw_month = input(f"Month (1-12, blank for {today.month}): ").strip()
+    try:
+        month = today.month if not raw_month else int(raw_month)
+        if not 1 <= month <= 12:
+            raise ValueError
+    except ValueError as exc:
+        raise ValueError("Enter a month from 1 to 12.") from exc
+
+    default_day = min(today.day, calendar.monthrange(year, month)[1])
+    raw_day = input(f"Day (1-{calendar.monthrange(year, month)[1]}, blank for {default_day}): ").strip()
+    try:
+        day = default_day if not raw_day else int(raw_day)
+        return date(year, month, day)
+    except ValueError as exc:
+        raise ValueError("Enter a valid day for the selected month.") from exc
 
 
 def prompt_summary_year():
@@ -119,7 +126,7 @@ def prompt_date_range():
 
 def show_summary():
     try:
-        print("\nSummary period: D=day, M=month, Q=quarter, Y=year")
+        print("\nSummary period: D=day, M=month, Y=year")
         choice = get_key("Choose period: ")
         if choice == "D":
             selected_day = prompt_summary_day()
@@ -132,14 +139,6 @@ def show_summary():
             end = date(year, month, calendar.monthrange(year, month)[1])
             granularity = "day"
             heading = f"Summary for {calendar.month_name[month]} {year}"
-        elif choice == "Q":
-            quarter, year = prompt_summary_quarter()
-            first_month = (quarter - 1) * 3 + 1
-            last_month = first_month + 2
-            start = date(year, first_month, 1)
-            end = date(year, last_month, calendar.monthrange(year, last_month)[1])
-            granularity = "month"
-            heading = f"Summary for Q{quarter} {year}"
         elif choice == "Y":
             year = prompt_summary_year()
             start, end = date(year, 1, 1), date(year, 12, 31)

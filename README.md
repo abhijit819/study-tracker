@@ -38,18 +38,18 @@ archived month. If an active month's summary cannot be recovered because its
 daily logs are missing or corrupt, plotting reports the problem instead of
 silently treating that month as zero study time. Future months are zero-filled.
 
-
-
 ### Summary menu
 
-Choose **R – Summary**, then select a period:
-- **D – Day:** enter a date (`YYYY-MM-DD`).
+Choose **R – Summary**, then select:
+- **D – Day:** enter year, month, and day in sequence. Each blank input
+  defaults to the current year, month, or day respectively. If the current
+  day does not exist in the selected month, the default is the month's last day.
 - **M – Month:** enter a month (`YYYY-MM`, blank for the current month).
-- **Q – Quarter:** enter a quarter (1–4) and year.
 - **Y – Year:** enter a year (blank for the current year).
 
-The summary totals study time by subject and shows the combined total. For active
-months, missing or invalid monthly summaries are rebuilt from daily logs before
-the summary is displayed. Archived months are read-only and are displayed from
-their retained summaries; they are never rebuilt. If an active month's data
-cannot be recovered from its daily logs, the summary reports the error.
+Summaries total study time by subject and show a combined total. A month with
+no summary and no daily log files is treated as zero study time. Consequently,
+missing months in a yearly summary contribute zero rather than causing an error.
+If a summary is missing but daily logs exist, the summary is rebuilt from those
+logs. Corrupt daily logs or an unrecoverable corrupt summary still produce an
+error. Archived months remain read-only and must have a valid retained summary.
