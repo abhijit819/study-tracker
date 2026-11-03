@@ -21,11 +21,11 @@ def main():
     while True:
         if service.active_session:
             print(
-                f"\\nActive: {service.active_session.subject} "
+                f"\nActive: {service.active_session.subject} "
                 f"({format_minutes(service.elapsed_minutes())} elapsed)"
             )
         else:
-            print(f"\\nCurrent subject: {current_subject}")
+            print(f"\nCurrent subject: {current_subject}")
 
         print("[S] Start  [E] End  [R] Monthly summary  [P] Plot")
         print("[C] Change subject  [B] Rebuild month  [A] Archive month  [Q] Quit")

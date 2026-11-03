@@ -33,32 +33,29 @@ def archive_month(year: int, month: int):
 
     path = summary_path(year, month)
     logs = list_daily_log_paths(year, month)
+    if not logs:
+        raise ValueError(
+            f"Cannot archive {key}: no daily log files exist for this month."
+        )
+
     rebuild_error = None
 
-    # Never overwrite an existing summary with an empty rebuild if no logs remain.
-    if logs:
-        try:
-            rebuild_month_summary(year, month)
-            validate_month_summary(year, month)
-            source = "rebuilt from daily logs"
-        except Exception as exc:
-            rebuild_error = exc
-            try:
-                validate_month_summary(year, month)
-                source = "existing monthly summary (daily logs were unusable)"
-            except Exception as summary_exc:
-                raise RuntimeError(
-                    "Cannot archive: logs could not rebuild the summary and the "
-                    "existing summary is invalid. Daily logs were retained."
-                ) from summary_exc
-    else:
+    # Daily logs are required to exist. Rebuild from them first; if they are
+    # corrupt, the valid incrementally maintained summary is the fallback.
+    try:
+        rebuild_month_summary(year, month)
+        validate_month_summary(year, month)
+        source = "rebuilt from daily logs"
+    except Exception as exc:
+        rebuild_error = exc
         try:
             validate_month_summary(year, month)
-            source = "existing monthly summary (no daily logs found)"
-        except Exception as exc:
+            source = "existing monthly summary (daily logs were unusable)"
+        except Exception as summary_exc:
             raise RuntimeError(
-                "Cannot archive: no daily logs and no valid monthly summary."
-            ) from exc
+                "Cannot archive: logs could not rebuild the summary and the "
+                "existing summary is invalid. Daily logs were retained."
+            ) from summary_exc
 
     totals = {}
     for row in validate_month_summary(year, month):
