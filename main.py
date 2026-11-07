@@ -1,4 +1,4 @@
-from config import DEFAULT_SUBJECT, ensure_directories
+from config import ensure_directories
 from services.session_service import SessionService
 from services.summary_service import ensure_current_month_summary_exists
 from services.archive_service import resume_interrupted_archives
@@ -6,6 +6,7 @@ from ui.keyboard import get_key
 from ui.menu import (
     archive_month_menu, format_minutes, plot_menu, rebuild_month, show_summary,
 )
+from storage.subject_metadata import canonical_subject, load_subject_metadata, save_subject_metadata
 
 
 def format_elapsed(seconds):
@@ -22,7 +23,9 @@ def main():
     ensure_current_month_summary_exists()
 
     service = SessionService()
-    current_subject = DEFAULT_SUBJECT
+    metadata = load_subject_metadata()
+    subjects = metadata["subjects"]
+    current_subject = canonical_subject(metadata["current_subject"], subjects)
     print("Study Tracker")
 
     while True:
@@ -35,7 +38,8 @@ def main():
             print(f"\nCurrent subject: {current_subject}")
 
         print("[S] Start  [E] End  [T] Elapsed time  [R] Summary  [P] Plot")
-        print("[C] Change subject  [B] Rebuild month  [A] Archive month  [Q] Quit")
+        print("[C] Change subject  [V] View subjects  [B] Rebuild month")
+        print("[A] Archive month  [Q] Quit")
         choice = get_key()
 
         if choice == "S":
@@ -77,7 +81,12 @@ def main():
                     continue
             new_subject = input("New subject: ").strip()
             if new_subject:
-                current_subject = new_subject
+                current_subject = canonical_subject(new_subject, subjects)
+        elif choice == "V":
+            print("\nSubjects introduced:")
+            for index, subject in enumerate(subjects, start=1):
+                marker = " (current)" if subject.casefold() == current_subject.casefold() else ""
+                print(f"  {index}. {subject}{marker}")
         elif choice == "B":
             rebuild_month()
         elif choice == "A":
@@ -95,6 +104,7 @@ def main():
                     print(f"Could not save active session: {exc}")
                     print("Quit cancelled so you can resolve the save problem.")
                     continue
+            save_subject_metadata(subjects, current_subject)
             print("Goodbye.")
             break
         else:

@@ -45,7 +45,8 @@ def update_summary_for_session(subject: str, session_day: date, minutes: int):
         for row in validate_month_summary(session_day.year, session_day.month):
             totals[(row["date"], row["subject"])] = int(row["duration_minutes"])
 
-    row_key = (session_day.isoformat(), subject)
+    canonical = next((name for _, name in totals if name.casefold() == subject.casefold()), subject)
+    row_key = (session_day.isoformat(), canonical)
     totals[row_key] = totals.get(row_key, 0) + minutes
     write_month_summary(
         session_day.year, session_day.month,
@@ -80,7 +81,8 @@ def rebuild_month_summary(year: int, month: int):
                     raise ValueError
             except (KeyError, TypeError, ValueError) as exc:
                 raise ValueError(f"Invalid session row in {path.name}") from exc
-            totals[(file_day.isoformat(), subject)] += minutes
+            canonical = next((name for _, name in totals if name.casefold() == subject.casefold()), subject)
+            totals[(file_day.isoformat(), canonical)] += minutes
 
     write_month_summary(year, month, _complete_daily_rows(dict(totals), year, month))
     return len(paths)

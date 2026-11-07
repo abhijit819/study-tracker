@@ -26,7 +26,7 @@ def get_study_data(start_date: date, end_date: date, granularity="day", subject=
         raise ValueError("Unsupported granularity")
 
     daily = defaultdict(int)
-    subjects = set()
+    subjects_by_key = {}
     today = date.today()
 
     for year, month in _months_between(start_date, end_date):
@@ -39,13 +39,15 @@ def get_study_data(start_date: date, end_date: date, granularity="day", subject=
         rows = get_or_rebuild_monthly_summary(year, month)
         for row in rows:
             day = date.fromisoformat(row["date"])
-            name = row["subject"]
-            if start_date <= day <= end_date and (subject is None or name == subject):
-                subjects.add(name)
-                daily[(day, name)] += int(row["duration_minutes"])
+            name = row["subject"].strip()
+            key = name.casefold()
+            if start_date <= day <= end_date and (subject is None or key == subject.strip().casefold()):
+                canonical = subjects_by_key.setdefault(key, name)
+                daily[(day, canonical)] += int(row["duration_minutes"])
 
     if subject is not None:
-        subjects.add(subject)
+        requested = subject.strip()
+        subjects_by_key.setdefault(requested.casefold(), requested)
 
     if granularity == "day":
         labels, cursor = [], start_date
@@ -68,10 +70,11 @@ def get_study_data(start_date: date, end_date: date, granularity="day", subject=
         labels = [str(y) for y in range(start_date.year, end_date.year + 1)]
         bucket = lambda d: str(d.year)
 
-    series = {name: [0] * len(labels) for name in sorted(subjects)}
+    subjects = sorted(subjects_by_key.values(), key=str.casefold)
+    series = {name: [0] * len(labels) for name in subjects}
     indexes = {label: i for i, label in enumerate(labels)}
     for (day, name), minutes in daily.items():
         label = bucket(day)
         if label in indexes:
             series[name][indexes[label]] += minutes
-    return labels, sorted(subjects), series
+    return labels, subjects, series

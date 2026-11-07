@@ -6,6 +6,7 @@ DAILY_LOG_DIR = DATA_DIR / "daily_logs"
 MONTHLY_SUMMARY_DIR = DATA_DIR / "monthly_summaries"
 METADATA_DIR = DATA_DIR / "metadata"
 ARCHIVE_MANIFEST = METADATA_DIR / "archives.json"
+SUBJECT_METADATA = METADATA_DIR / "subjects.json"
 
 DAILY_FIELDS = ["session_id", "subject", "start_time", "end_time", "duration_minutes"]
 SUMMARY_FIELDS = ["date", "subject", "duration_minutes"]
